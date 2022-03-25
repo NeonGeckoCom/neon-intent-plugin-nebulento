@@ -43,28 +43,3 @@ class NebulentoExtractor(IntentExtractor):
             intent["utterance_remainder"] = intent["utterance_remainder"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
             intent["utterance_consumed"] = intent["utterance_consumed"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
         return intent
-
-    def intent_scores(self, utterance):
-        utterance = utterance.strip().lower()
-        intents = []
-        bucket = self.calc_intents(utterance)
-        for utt in bucket:
-            intent = bucket[utt]
-            if not intent:
-                continue
-            intents.append(intent)
-        return intents
-
-    def calc_intents(self, utterance, min_conf=0.6):
-        bucket = {}
-        for ut in self.segmenter.segment(utterance):
-            intent = self.calc_intent(ut)
-            bucket[ut] = intent
-        return bucket
-
-    def calc_intents_list(self, utterance):
-        utterance = utterance.strip().lower()
-        bucket = {}
-        for ut in self.segmenter.segment(utterance):
-            bucket[ut] = self.filter_intents(ut)
-        return bucket

@@ -231,7 +231,7 @@ class TestNebulentoExtractor(unittest.TestCase):
                     continue
                 utt = res["utterance"]
                 self.assertEqual(res["intent_engine"], "nebulento")
-                self.assertIn(res["utterance"], expected)
+                self.assertIn(utt, expected)
                 self.assertEqual(res["intent_type"], expected[utt])
                 if utt in entities:
                     self.assertEqual(entities[utt], res["entities"])
