@@ -1,0 +1,4 @@
+recursive-include neon_intent_plugin_nebulento/ *
+recursive-include requirements/ *
+include CHANGELOG.md
+include LICENSE
