@@ -9,7 +9,19 @@ class NebulentoExtractor(IntentExtractor):
                  segmenter=None):
         super().__init__(config, strategy=strategy,
                          priority=priority, segmenter=segmenter)
-
+        fuzzy_strategy = self.config.get("fuzzy_strategy", "ratio")
+        if fuzzy_strategy == "ratio":
+            fuzzy_strategy = MatchStrategy.RATIO
+        elif fuzzy_strategy == "token_set_ratio":
+            fuzzy_strategy = MatchStrategy.TOKEN_SET_RATIO
+        elif fuzzy_strategy == "token_sort_ratio":
+            fuzzy_strategy = MatchStrategy.TOKEN_SORT_RATIO
+        elif fuzzy_strategy == "partial_token_set_ratio":
+            fuzzy_strategy = MatchStrategy.PARTIAL_TOKEN_SET_RATIO
+        elif fuzzy_strategy == "partial_token_sort_ratio":
+            fuzzy_strategy = MatchStrategy.PARTIAL_TOKEN_SORT_RATIO
+        else:
+            fuzzy_strategy = MatchStrategy.SIMPLE_RATIO
         self.engine = IntentContainer(fuzzy_strategy=fuzzy_strategy)
 
     def detach_intent(self, intent_name):
