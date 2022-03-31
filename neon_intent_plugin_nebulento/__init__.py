@@ -1,13 +1,15 @@
 from nebulento import IntentContainer, MatchStrategy
-from ovos_plugin_manager.templates.intents import IntentExtractor
+from ovos_plugin_manager.intents import IntentExtractor, IntentPriority, IntentDeterminationStrategy
 
 
 class NebulentoExtractor(IntentExtractor):
-    keyword_based = False
+    def __init__(self, config=None,
+                 strategy=IntentDeterminationStrategy.SEGMENT_REMAINDER,
+                 priority=IntentPriority.MEDIUM,
+                 segmenter=None):
+        super().__init__(config, strategy=strategy,
+                         priority=priority, segmenter=segmenter)
 
-    def __init__(self, fuzzy_strategy=MatchStrategy.SIMPLE_RATIO, *args,
-                 **kwargs):
-        super().__init__(*args, **kwargs)
         self.engine = IntentContainer(fuzzy_strategy=fuzzy_strategy)
 
     def detach_intent(self, intent_name):
