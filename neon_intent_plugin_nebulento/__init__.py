@@ -2,6 +2,15 @@ from nebulento import IntentContainer, MatchStrategy
 from ovos_plugin_manager.intents import IntentExtractor, IntentPriority, IntentDeterminationStrategy, IntentMatch
 
 
+def _munge(name, skill_id):
+    return f"{name}:{skill_id}"
+
+
+def _unmunge(munged):
+    return munged.split(":", 2)
+
+
+
 class NebulentoExtractor(IntentExtractor):
     def __init__(self, config=None,
                  strategy=IntentDeterminationStrategy.SEGMENT_REMAINDER,
@@ -31,23 +40,27 @@ class NebulentoExtractor(IntentExtractor):
             self.engines[lang] = IntentContainer(fuzzy_strategy=self.fuzzy_strategy)
         return self.engines[lang]
 
-    def detach_intent(self, intent_name):
+    def detach_intent(self, skill_id, intent_name):
         for intent in self.registered_intents:
-            if intent.name == intent_name and intent.lang in self.engines:
+            if intent.name == intent_name and \
+                    intent.lang in self.engines and \
+                    intent.skill_id == skill_id:
                 if intent_name in self.engines[intent.lang].registered_intents:
-                    self.engines[intent.lang].registered_intents.remove(intent_name)
+                    self.engines[intent.lang].registered_intents.remove(
+                        _munge(intent_name, skill_id))
         super().detach_intent(intent_name)
 
-    def register_entity(self, entity_name, samples=None, lang=None):
+    def register_entity(self, skill_id, entity_name, samples=None, lang=None):
         lang = lang or self.lang
+        super().register_entity(skill_id, entity_name, samples, lang)
         engine = self._get_engine(lang)
-        super().register_entity(entity_name, samples)
         engine.add_entity(entity_name, samples)
 
-    def register_intent(self, intent_name, samples=None, lang=None):
+    def register_intent(self, skill_id, intent_name, samples=None, lang=None):
         lang = lang or self.lang
+        super().register_intent(skill_id, intent_name, samples, lang)
         engine = self._get_engine(lang)
-        super().register_intent(intent_name, samples)
+        intent_name = _munge(intent_name, skill_id)
         engine.add_intent(intent_name, samples)
 
     # matching
@@ -72,9 +85,9 @@ class NebulentoExtractor(IntentExtractor):
             intent["utterance_remainder"] = intent["utterance_remainder"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
             intent["utterance_consumed"] = intent["utterance_consumed"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
 
-        skill_id = self.get_intent_skill_id(intent["intent_type"])
+        intent_type, skill_id = _unmunge(intent["intent_type"])
         return IntentMatch(intent_service=intent["intent_engine"],
-                           intent_type=intent["intent_type"],
+                           intent_type=intent_type,
                            intent_data=intent,
                            confidence=intent["conf"],
                            skill_id=skill_id)
