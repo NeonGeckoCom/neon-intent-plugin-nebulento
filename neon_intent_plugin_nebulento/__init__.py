@@ -22,24 +22,37 @@ class NebulentoExtractor(IntentExtractor):
             fuzzy_strategy = MatchStrategy.PARTIAL_TOKEN_SORT_RATIO
         else:
             fuzzy_strategy = MatchStrategy.SIMPLE_RATIO
-        self.engine = IntentContainer(fuzzy_strategy=fuzzy_strategy)
+        self.fuzzy_strategy = fuzzy_strategy
+        self.engines = {}  # lang: IntentContainer
+
+    def _get_engine(self, lang=None):
+        lang = lang or self.lang
+        if lang not in self.engines:
+            self.engines[lang] = IntentContainer(fuzzy_strategy=self.fuzzy_strategy)
+        return self.engines[lang]
 
     def detach_intent(self, intent_name):
         super().detach_intent(intent_name)
         if intent_name in self.engine.registered_intents:
             self.engine.registered_intents.remove(intent_name)
 
-    def register_entity(self, entity_name, samples=None):
+    def register_entity(self, entity_name, samples=None, lang=None):
+        lang = lang or self.lang
+        engine = self._get_engine(lang)
         super().register_entity(entity_name, samples)
-        self.engine.add_entity(entity_name, samples)
+        engine.add_entity(entity_name, samples)
 
-    def register_intent(self, intent_name, samples=None):
+    def register_intent(self, intent_name, samples=None, lang=None):
+        lang = lang or self.lang
+        engine = self._get_engine(lang)
         super().register_intent(intent_name, samples)
-        self.engine.add_intent(intent_name, samples)
+        engine.add_intent(intent_name, samples)
 
     # matching
-    def calc_intent(self, utterance, min_conf=0.6):
-        intent = self.engine.calc_intent(utterance)
+    def calc_intent(self, utterance, min_conf=0.6, lang=None, session=None):
+        lang = lang or self.lang
+        engine = self._get_engine(lang)
+        intent = engine.calc_intent(utterance)
         intent["intent_engine"] = "nebulento"
         intent["intent_type"] = intent.pop("name")
         if intent["conf"] < min_conf:
@@ -47,7 +60,7 @@ class NebulentoExtractor(IntentExtractor):
                       "intent_type": "unknown",
                       "intent_engine": "nebulento",
                       'entities': {},
-                      "match_strategy": self.strategy,
+                      "match_strategy": self.fuzzy_strategy,
                       "utterance_remainder": utterance,
                       'utterance_consumed': ""}
         else:
