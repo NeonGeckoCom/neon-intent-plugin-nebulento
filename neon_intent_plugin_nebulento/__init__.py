@@ -1,5 +1,5 @@
 from nebulento import IntentContainer, MatchStrategy
-from ovos_plugin_manager.intents import IntentExtractor, IntentPriority, IntentDeterminationStrategy
+from ovos_plugin_manager.intents import IntentExtractor, IntentPriority, IntentDeterminationStrategy, IntentMatch
 
 
 class NebulentoExtractor(IntentExtractor):
@@ -71,4 +71,10 @@ class NebulentoExtractor(IntentExtractor):
             # HACK - normalize some stuff
             intent["utterance_remainder"] = intent["utterance_remainder"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
             intent["utterance_consumed"] = intent["utterance_consumed"].lstrip(",.;:!?\"' ").rstrip(",.;:!?\"' ")
-        return intent
+
+        skill_id = self.get_intent_skill_id(intent["intent_type"])
+        return IntentMatch(intent_service=intent["intent_engine"],
+                           intent_type=intent["intent_type"],
+                           intent_data=intent,
+                           confidence=intent["conf"],
+                           skill_id=skill_id)
