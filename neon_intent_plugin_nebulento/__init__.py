@@ -32,9 +32,11 @@ class NebulentoExtractor(IntentExtractor):
         return self.engines[lang]
 
     def detach_intent(self, intent_name):
+        for intent in self.registered_intents:
+            if intent.name == intent_name and intent.lang in self.engines:
+                if intent_name in self.engines[intent.lang].registered_intents:
+                    self.engines[intent.lang].registered_intents.remove(intent_name)
         super().detach_intent(intent_name)
-        if intent_name in self.engine.registered_intents:
-            self.engine.registered_intents.remove(intent_name)
 
     def register_entity(self, entity_name, samples=None, lang=None):
         lang = lang or self.lang
